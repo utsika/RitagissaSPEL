@@ -31,13 +31,4 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-
-// TILLFÄLLIG TESTKOD — ta bort igen efter du sett att det funkar
-using (var testConn = new NpgsqlConnection(connString))
-{
-    await testConn.OpenAsync();
-    using var testCmd = new NpgsqlCommand("SELECT version()", testConn);
-    var version = (string)await testCmd.ExecuteScalarAsync();
-    Console.WriteLine($"✅ Anslutning OK: {version}");
-}
 app.Run();
