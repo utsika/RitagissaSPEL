@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 using Ritagissa.Models;
 using System.Diagnostics;
 
@@ -6,8 +7,24 @@ namespace Ritagissa.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        //public IActionResult Index()
+        //{
+        //    return View();
+        //}
+
+        public async Task<IActionResult> Index()
         {
+            var connString = "Host=aws-0-eu-central-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.dveeoewnhymgaokbmzjf;Password=zbgg9JIHf9bwCVjl";
+
+            await using var conn = new NpgsqlConnection(connString);
+            await conn.OpenAsync();
+
+            await using var cmd = new NpgsqlCommand("SELECT \"Name\" FROM \"Hats\" WHERE \"Name\" = 'keps'", conn);
+
+            var result = await cmd.ExecuteScalarAsync();
+
+            ViewBag.DbTest = result != null ? $"Databasen svarade: {result}" : "Anslutning OK, men ingen rad hittades";
+
             return View();
         }
 
@@ -22,4 +39,6 @@ namespace Ritagissa.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
+
+
 }
