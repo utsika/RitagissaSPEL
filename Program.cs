@@ -7,7 +7,7 @@ builder.Services.AddControllersWithViews();
 
 var connString = builder.Configuration.GetConnectionString("Supabase");
 builder.Services.AddSingleton(new NpgsqlDataSourceBuilder(connString).Build());
-
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

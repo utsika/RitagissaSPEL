@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Testa ord-API:et";
+    var word = ViewBag.Word as string;
+}
+
+<div class="container text-center mt-5">
+    <h2>Testa ord-API:et</h2>
+
+    @if (!string.IsNullOrEmpty(word))
+    {
+        <p class="display-3 my-4">@word</p>
+    }
+    else
+    {
+        <p class="text-muted my-4">Inget ord hämtat än.</p>
+    }
+
+    <a class="btn btn-primary btn-lg" asp-controller="Test" asp-action="GetWord">
+        Hämta nytt ord
+    </a>
+</div>
