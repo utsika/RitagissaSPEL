@@ -2,9 +2,105 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
 
-<p>@ViewBag.DbTest</p>
+
+@* <p>@ViewBag.DbTest</p> *@
+
+<!--
+    Inte rätt än, försöker få struktur först
+    Spelkoden ska komma fram när spelaren trycker på "Gå med i spel", tänk som labb 1 i AFI
+    Låter det vara såhär så länge - ändrar när spellogiken fungerar :)
+-->
+
+<div class="box">
+    <div class="game-actions">
+
+        <a asp-action="CreateGame"
+           asp-controller="Game"
+           class="btn-main btn-hej">
+            Skapa spel
+        </a>
+
+        <form asp-action="JoinGame" asp-controller="Game" method="post">
+            <div class="skrivfalt">
+                <input name="roomCode"
+                       class="form-control"
+                       placeholder="Ange spelkod" />
+            </div>
+            <button type="submit" class="btn-main btn-hej">
+                Joina spel
+            </button>
+        </form>
+    </div>
+
+    <style>
+            .container {
+                place-items: center;
+            }
+            .box {
+                width: 30vw;
+                font-family: monospace;
+                align-items: center;
+            }
+            .skrivfalt{
+                width: 30vw;
+            }
+
+            .btn-main {
+                width: 30vw;
+                padding: 0.6rem;
+                border-radius: 8px;
+                text-align: center;
+                font-family: monospace;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+                display: inline-block;
+                text-decoration: none;
+                margin-top: 8px;
+                margin-bottom: 8px;
+            }
+
+            .btn-leave{
+                width: 20vw;
+                padding: 0.2rem;
+                border-radius: 8px;
+                text-align: center;
+                font-family: monospace;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+                display: inline-block;
+                text-decoration: none;
+                margin-top: 8px;
+                margin-bottom: 8px;
+                margin-left: auto;
+                margin-right: auto;
+                display: block;
+
+            }
+
+            .btn-hej {
+                background-color: #c789b3;
+                color: white;
+                border: none;
+            }
+
+                .btn-hej:hover {
+                    background-color: #8E4B77;
+                }
+
+            .btn-heeej{
+                background-color: white;
+                border: 2px solid #8E4B77;
+                color: #8E4B77;
+            }
+            .btn-heeej:hover{
+                background-color: #8E4B77;
+                color:white;
+
+            }
+
+            .game-actions {
+                margin: 2vh;
+                margin-bottom: 8vh;
+            }
+    </style>
