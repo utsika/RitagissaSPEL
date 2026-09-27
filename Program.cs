@@ -4,6 +4,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<GameRoomManager>();
 
 var connString = builder.Configuration.GetConnectionString("Supabase");
 builder.Services.AddSingleton(new NpgsqlDataSourceBuilder(connString).Build());
@@ -30,5 +32,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+app.MapHub<GameHub>("/gamehub");
 
 app.Run();

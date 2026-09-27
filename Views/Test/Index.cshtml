@@ -1,0 +1,50 @@
+<h3>Skapa rum</h3>
+<button id="createRoomBtn">Skapa rum</button>
+<p id="roomCodeDisplay"></p>
+
+<h3>Gå med i rum</h3>
+<input id="roomCodeInput" placeholder="Rumskod" />
+<input id="playerNameInput" placeholder="Ditt namn" />
+<button id="joinRoomBtn">Gå med</button>
+
+<h3>Logg</h3>
+<ul id="log"></ul>
+
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/gamehub")
+        .build();
+
+    function log(msg) {
+        const li = document.createElement("li");
+        li.textContent = msg;
+        document.getElementById("log").appendChild(li);
+    }
+
+    connection.on("RoomCreated", (roomCode) => {
+        document.getElementById("roomCodeDisplay").textContent = `Rum skapat: ${roomCode}`;
+        log(`Rum skapat: ${roomCode}`);
+    });
+
+    connection.on("PlayerJoined", (playerName) => {
+        log(`${playerName} gick med i rummet!`);
+    });
+
+    connection.on("JoinFailed", (reason) => {
+        log(`Kunde inte gå med: ${reason}`);
+    });
+
+    connection.start().then(() => log("Ansluten till servern"));
+
+    document.getElementById("createRoomBtn").addEventListener("click", () => {
+        const roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+        connection.invoke("CreateRoom", roomCode);
+    });
+
+    document.getElementById("joinRoomBtn").addEventListener("click", () => {
+        const roomCode = document.getElementById("roomCodeInput").value;
+        const playerName = document.getElementById("playerNameInput").value;
+        connection.invoke("JoinRoom", roomCode, playerName);
+    });
+</script>
