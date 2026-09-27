@@ -27,4 +27,18 @@ public class GameHub : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
         await Clients.Group(roomCode).SendAsync("PlayerJoined", playerName);
     }
+	
+
+	public async Task SendMessage(string roomCode, string playerName, string message)
+	{
+		await Clients.Group(roomCode).SendAsync("ReceiveMessage", playerName, message);
+	}
+
+	public async Task LeaveRoom(string roomCode, string playerName)
+{
+    await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
+    await Clients.Group(roomCode).SendAsync("PlayerLeft", playerName);
+    await Clients.Caller.SendAsync("YouLeftRoom"); // ny rad - bekräftelse till den som lämnade
+}
+
 }

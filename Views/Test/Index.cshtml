@@ -1,3 +1,7 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
 <h3>Skapa rum</h3>
 <button id="createRoomBtn">Skapa rum</button>
 <p id="roomCodeDisplay"></p>
@@ -6,6 +10,13 @@
 <input id="roomCodeInput" placeholder="Rumskod" />
 <input id="playerNameInput" placeholder="Ditt namn" />
 <button id="joinRoomBtn">Gå med</button>
+
+<h3>Chatt</h3>
+<input id="chatInput" placeholder="Skriv ett meddelande" />
+<button id="sendMessageBtn">Skicka</button>
+<ul id="chatLog"></ul>
+
+<button id="leaveRoomBtn">Lämna rum</button>
 
 <h3>Logg</h3>
 <ul id="log"></ul>
@@ -16,11 +27,16 @@
         .withUrl("/gamehub")
         .build();
 
+    let currentRoomCode = null;
+    let currentPlayerName = null;
+
     function log(msg) {
         const li = document.createElement("li");
         li.textContent = msg;
         document.getElementById("log").appendChild(li);
     }
+
+    // ----- Inkommande meddelanden från servern -----
 
     connection.on("RoomCreated", (roomCode) => {
         document.getElementById("roomCodeDisplay").textContent = `Rum skapat: ${roomCode}`;
@@ -35,16 +51,52 @@
         log(`Kunde inte gå med: ${reason}`);
     });
 
+    connection.on("PlayerLeft", (playerName) => {
+        log(`${playerName} lämnade rummet`);
+    });
+
+    connection.on("ReceiveMessage", (playerName, message) => {
+        const li = document.createElement("li");
+        li.textContent = `${playerName}: ${message}`;
+        document.getElementById("chatLog").appendChild(li);
+    });
+
+    // ----- Starta anslutningen -----
+
     connection.start().then(() => log("Ansluten till servern"));
+
+	connection.on("YouLeftRoom", () => {
+		log("Du lämnade rummet");
+		document.getElementById("roomCodeDisplay").textContent = "";
+		currentRoomCode = null;
+		currentPlayerName = null;
+	});
+
+    // ----- Knappar -----
 
     document.getElementById("createRoomBtn").addEventListener("click", () => {
         const roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+        currentRoomCode = roomCode;
         connection.invoke("CreateRoom", roomCode);
     });
 
     document.getElementById("joinRoomBtn").addEventListener("click", () => {
         const roomCode = document.getElementById("roomCodeInput").value;
         const playerName = document.getElementById("playerNameInput").value;
+
+        currentRoomCode = roomCode;
+        currentPlayerName = playerName;
+
         connection.invoke("JoinRoom", roomCode, playerName);
+    });
+
+    document.getElementById("sendMessageBtn").addEventListener("click", () => {
+        const message = document.getElementById("chatInput").value;
+        connection.invoke("SendMessage", currentRoomCode, currentPlayerName, message);
+        document.getElementById("chatInput").value = "";
+    });
+
+    document.getElementById("leaveRoomBtn").addEventListener("click", () => {
+        connection.invoke("LeaveRoom", currentRoomCode, currentPlayerName);
     });
 </script>
