@@ -2,6 +2,28 @@
     ViewData["Title"] = "Home Page";
 }
 
+<h3>Skapa rum</h3>
+<input id="createPlayerNameInput" placeholder="Ditt namn" />
+<button id="createRoomBtn">Skapa rum</button>
+
+<h3>Gå med i rum</h3>
+<input id="roomCodeInput" placeholder="Rumskod" />
+<input id="playerNameInput" placeholder="Ditt namn" />
+<button id="joinRoomBtn">Gå med</button>
+
+<script>
+    document.getElementById("createRoomBtn").addEventListener("click", () => {
+        const playerName = document.getElementById("createPlayerNameInput").value;
+        const roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+        window.location.href = `/Home/Lobby?roomCode=${roomCode}&playerName=${encodeURIComponent(playerName)}&isHost=true`;
+    });
+
+    document.getElementById("joinRoomBtn").addEventListener("click", () => {
+        const roomCode = document.getElementById("roomCodeInput").value;
+        const playerName = document.getElementById("playerNameInput").value;
+        window.location.href = `/Home/Lobby?roomCode=${roomCode}&playerName=${encodeURIComponent(playerName)}&isHost=false`;
+    });
+</script>
 
 
 @* <p>@ViewBag.DbTest</p> *@
@@ -12,7 +34,7 @@
     Låter det vara såhär så länge - ändrar när spellogiken fungerar :)
 -->
 
-<div class="box">
+@* <div class="box">
     <div class="game-actions">
 
         <a asp-action="CreateGame"
@@ -31,9 +53,9 @@
                 Joina spel
             </button>
         </form>
-    </div>
+    </div> *@
 
-    <style>
+    @* <style>
             .container {
                 place-items: center;
             }
@@ -103,4 +125,4 @@
                 margin: 2vh;
                 margin-bottom: 8vh;
             }
-    </style>
+    </style> *@

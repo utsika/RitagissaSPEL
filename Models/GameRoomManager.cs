@@ -1,8 +1,21 @@
+using Ritagissa.Models;
+
 public class GameRoomManager
 {
-    private readonly HashSet<string> _activeRooms = new();
+    private readonly Dictionary<string, GameSession> _rooms = new();
 
-    public void CreateRoom(string roomCode) => _activeRooms.Add(roomCode);
+    public GameSession GetOrCreateRoom(string roomCode)
+    {
+        if (!_rooms.TryGetValue(roomCode, out var session))
+        {
+            session = new GameSession(roomCode);
+            _rooms[roomCode] = session;
+        }
+        return session;
+    }
 
-    public bool RoomExists(string roomCode) => _activeRooms.Contains(roomCode);
+    public GameSession? GetRoom(string roomCode) => _rooms.GetValueOrDefault(roomCode);
+
+    public GameSession? FindRoomByConnectionId(string connectionId) =>
+        _rooms.Values.FirstOrDefault(r => r.Players.Any(p => p.Id == connectionId));
 }
