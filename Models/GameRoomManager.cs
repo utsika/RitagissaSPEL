@@ -17,5 +17,5 @@ public class GameRoomManager
     public GameSession? GetRoom(string roomCode) => _rooms.GetValueOrDefault(roomCode);
 
     public GameSession? FindRoomByConnectionId(string connectionId) =>
-        _rooms.Values.FirstOrDefault(r => r.Players.Any(p => p.Id == connectionId));
+        _rooms.Values.FirstOrDefault(r => r.Players.Any(p => p.ConnectionId == connectionId));
 }

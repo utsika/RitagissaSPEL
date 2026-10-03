@@ -20,6 +20,11 @@
     const roomCode = params.get("roomCode");
     const playerName = params.get("playerName");
     const isHost = params.get("isHost") === "true";
+    let playerId = sessionStorage.getItem("ritagissaPlayerId");
+    if (!playerId) {
+        playerId = crypto.randomUUID();
+        sessionStorage.setItem("ritagissaPlayerId", playerId);
+    }
 
     document.getElementById("roomCodeDisplay").textContent = roomCode;
     if (isHost) {
@@ -47,9 +52,9 @@
 
     connection.start().then(() => {
         if (isHost) {
-            connection.invoke("CreateRoom", roomCode, playerName);
+            connection.invoke("CreateRoom", roomCode, playerName, playerId);
         } else {
-            connection.invoke("JoinRoom", roomCode, playerName);
+            connection.invoke("JoinRoom", roomCode, playerName, playerId);
         }
     });
 </script>

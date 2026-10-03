@@ -18,10 +18,10 @@ public class GameHub : Hub
     //    await Clients.Caller.SendAsync("RoomCreated", roomCode);
     //}
 
-    public async Task CreateRoom(string roomCode, string playerName)
+    public async Task CreateRoom(string roomCode, string playerName, string playerId)
     {
         _roomManager.GetOrCreateRoom(roomCode); // skapar bara om den inte redan finns
-        await JoinRoom(roomCode, playerName);
+        await JoinRoom(roomCode, playerName, playerId);
         await Clients.Caller.SendAsync("RoomCreated", roomCode);
     }
 
@@ -36,7 +36,7 @@ public class GameHub : Hub
     //    await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
     //    await Clients.Group(roomCode).SendAsync("PlayerJoined", playerName);
     //}
-    public async Task JoinRoom(string roomCode, string playerName)
+    public async Task JoinRoom(string roomCode, string playerName, string playerId)
     {
         var room = _roomManager.GetRoom(roomCode);
         if (room == null)
@@ -45,17 +45,24 @@ public class GameHub : Hub
             return;
         }
 
-        var player = new Player { Id = Context.ConnectionId, Name = playerName };
-        room.Players.Add(player);
+        var player = room.Players.FirstOrDefault(p => p.Id == playerId);
+        if (player == null)
+        {
+            player = new Player { Id = playerId, Name = playerName };
+            room.Players.Add(player);
+        }
+
+        player.Name = playerName;
+        player.ConnectionId = Context.ConnectionId;
 
         await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
         await Clients.Group(roomCode).SendAsync("PlayerListUpdated", room.Players.Select(p => p.Name));
     }
 
-    public async Task LeaveRoom(string roomCode, string playerName)
+    public async Task LeaveRoom(string roomCode, string playerId)
     {
         var room = _roomManager.GetRoom(roomCode);
-        var player = room?.Players.FirstOrDefault(p => p.Id == Context.ConnectionId);
+        var player = room?.Players.FirstOrDefault(p => p.Id == playerId && p.ConnectionId == Context.ConnectionId);
         if (player != null) room!.Players.Remove(player);
 
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
@@ -72,8 +79,10 @@ public class GameHub : Hub
         var room = _roomManager.FindRoomByConnectionId(Context.ConnectionId);
         if (room != null)
         {
-            var player = room.Players.First(p => p.Id == Context.ConnectionId);
-            room.Players.Remove(player);
+            var player = room.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
+            if (player != null)
+                player.ConnectionId = string.Empty;
+
             await Clients.Group(room.RoomCode).SendAsync("PlayerListUpdated", room.Players.Select(p => p.Name));
         }
 
