@@ -7,6 +7,12 @@
     ViewData["Title"] = "Lobby";
 }
 
+@section Head {
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Madimi+One&display=swap" rel="stylesheet" />
+}
+
 <style>
     #gameButton {
         width: 280px;
@@ -60,15 +66,118 @@
                 cursor: default;
             }
 
-    #roundsSetting {
-        margin: 16px 0;
+    body {
+        background-image: url('/images/backgroundImage.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+
+    /* ----- Lobbyn ----- */
+    .lobbyFrame {
+        max-width: 680px;
+        min-height: 440px;
+        margin: 40px auto;
+        padding: 24px 32px 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: white;
+        border: 3px solid #990000;
+        border-radius: 8px;
+        font-family: 'Madimi One', sans-serif;
+        text-align: center;
+    }
+
+        .lobbyFrame h2 {
+            font-family: inherit;
+            font-size: 1.6rem;
+            margin-bottom: 0;
+        }
+
+    /* Första spelaren hamnar i mitten och de nästa sprids utåt (justify-content: center) */
+    #playerList {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        width: 100%;
+        list-style: none;
+        padding: 0;
+        margin: 36px 0;
+    }
+
+        #playerList li {
+            flex: 0 1 90px;
+            min-width: 0;
+            font-size: 0.8rem;
+        }
+
+        #playerList .avatar {
+            margin-bottom: 8px;
+        }
+
+        /* Fullt rum: spelarna fyller ut hela bredden */
+        #playerList.full {
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+    #lobbyStatus {
+        margin: auto 0;
         font-size: 1.1rem;
     }
 
+    #roundsSetting {
+        margin: 8px 0 32px;
+        font-size: 0.8rem;
+    }
+
+        /* Slidern: svart linje med röd prick */
         #roundsSlider {
+            -webkit-appearance: none;
+            appearance: none;
             display: block;
-            width: 280px;
-            accent-color: #990000;
+            width: 210px;
+            height: 3px;
+            margin-top: 18px;
+            background: black;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+            #roundsSlider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: #990000;
+            }
+
+            #roundsSlider::-moz-range-thumb {
+                width: 16px;
+                height: 16px;
+                border: none;
+                border-radius: 50%;
+                background: #990000;
+            }
+
+    #startGameBtn {
+        padding: 8px 12px;
+        font-family: inherit;
+        font-size: 1.1rem;
+        background: white;
+        color: black;
+        border: 3px solid #990000;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        #startGameBtn:hover {
+            background: #990000;
+            color: white;
         }
 
     #drawCanvas {
@@ -91,17 +200,19 @@
         }
 </style>
 
-@* NYTT: rundinfo bredvid rumskoden *@
-<h2>Rum: <span id="roomCodeDisplay"></span> <small id="roundInfo"></small></h2>
+@* NYTT: rundinfo bredvid rumskoden (visas inte i lobbyn, där står rumskoden i ramen) *@
+<h2 id="gameHeader" style="display:none;">Rum: <span id="roomCodeDisplay"></span> <small id="roundInfo"></small></h2>
 
-<div id="lobbyPanel">
-    <h3>Spelare i rummet</h3>
+<div id="lobbyPanel" class="lobbyFrame">
+    <h2 id="lobbyRoomCode"></h2>
     <ul id="playerList"></ul>
 
+    <p id="lobbyStatus"></p>
+
     @* Värden väljer antal rundor, de andra ser bara värdet *@
-    <div id="roundsSetting">
-        <label for="roundsSlider">Antal rundor: <strong id="roundsValue">2</strong></label>
-        <input type="range" id="roundsSlider" min="2" max="6" step="1" value="2" style="display:none;" />
+    <div id="roundsSetting" style="display:none;">
+        <label for="roundsSlider">Antal Rundor: <span id="roundsValue">2</span></label>
+        <input type="range" id="roundsSlider" min="2" max="6" step="1" value="2" />
     </div>
 
     <button id="startGameBtn" style="display:none;">Starta spel</button>
@@ -157,17 +268,21 @@
     }
 
     document.getElementById("roomCodeDisplay").textContent = roomCode;
+    document.getElementById("lobbyRoomCode").textContent = roomCode;
     if (isHost) {
         document.getElementById("startGameBtn").style.display = "inline-block";
-        document.getElementById("roundsSlider").style.display = "block";
+        document.getElementById("roundsSetting").style.display = "block";
     }
 
     // NYTT: gameOverPanel tillagd i listan
     const panels = ["lobbyPanel", "choosePanel", "waitPanel", "gamePanel", "gameOverPanel"];
     function showPanel(name) {
         panels.forEach(p => {
-            document.getElementById(p).style.display = (p === name) ? "block" : "none";
+            // lobbyPanel är en flex-ruta, de andra vanliga block
+            const shown = p === "lobbyPanel" ? "flex" : "block";
+            document.getElementById(p).style.display = (p === name) ? shown : "none";
         });
+        document.getElementById("gameHeader").style.display = (name === "lobbyPanel") ? "none" : "block";
     }
 
     let countdownInterval = null;
@@ -240,14 +355,36 @@
         .withUrl("/gamehub")
         .build();
 
-    connection.on("PlayerListUpdated", (playerNames) => {
+    connection.on("PlayerListUpdated", (players, maxPlayers) => {
         const list = document.getElementById("playerList");
         list.innerHTML = "";
-        playerNames.forEach(name => {
+        players.forEach(player => {
             const li = document.createElement("li");
-            li.textContent = name;
+
+            // Gubben: bildlagren kommer i rätt ordning från servern
+            const avatarBox = document.createElement("div");
+            avatarBox.className = "avatar";
+            player.layers.forEach(layer => {
+                const img = document.createElement("img");
+                img.src = `/images/avatar/${layer}.png`;
+                img.alt = "";
+                avatarBox.appendChild(img);
+            });
+
+            const name = document.createElement("div");
+            name.textContent = player.name;
+
+            li.append(avatarBox, name);
             list.appendChild(li);
         });
+
+        const isFull = players.length >= maxPlayers;
+        list.classList.toggle("full", isFull);
+
+        // Värden ser slider och startknapp istället för "Inväntar fler spelare..."
+        const status = document.getElementById("lobbyStatus");
+        status.textContent = isFull ? "Rummet är Fullt!" : (isHost ? "" : "Inväntar fler spelare...");
+        status.style.display = status.textContent ? "block" : "none";
     });
 
     connection.on("JoinFailed", (reason) => {
@@ -417,11 +554,15 @@
         connection.invoke("StartGame", roomCode).catch(err => console.error(err));
     });
 
+    // Gubben som valdes på startsidan (servern väljer standardplagg om den saknas)
+    let avatar = null;
+    try { avatar = JSON.parse(sessionStorage.getItem("ritagissaAvatar")); } catch { }
+
     connection.start().then(() => {
         if (isHost) {
-            connection.invoke("CreateRoom", roomCode, playerName, playerId);
+            connection.invoke("CreateRoom", roomCode, playerName, playerId, avatar);
         } else {
-            connection.invoke("JoinRoom", roomCode, playerName, playerId);
+            connection.invoke("JoinRoom", roomCode, playerName, playerId, avatar);
         }
     });
 </script>

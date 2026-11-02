@@ -4,22 +4,25 @@ using Ritagissa.Models;
 public class GameHub : Hub
 {
     private const int MinPlayers = 2;
+    private const int MaxPlayers = 6;
     private const int MinRounds = 2;
     private const int MaxRounds = 6;
     private readonly GameRoomManager _roomManager;
     private readonly GameService _gameService;
+    private readonly AvatarRepository _avatarRepository;
 
 
-    public GameHub(GameRoomManager roomManager, GameService gameService)
+    public GameHub(GameRoomManager roomManager, GameService gameService, AvatarRepository avatarRepository)
     {
         _roomManager = roomManager;
         _gameService = gameService;
+        _avatarRepository = avatarRepository;
     }
 
-    public async Task CreateRoom(string roomCode, string playerName, string playerId)
+    public async Task CreateRoom(string roomCode, string playerName, string playerId, Avatar? avatar)
     {
         _roomManager.GetOrCreateRoom(roomCode); // skapar bara om den inte redan finns
-        await JoinRoom(roomCode, playerName, playerId);
+        await JoinRoom(roomCode, playerName, playerId, avatar);
         await Clients.Caller.SendAsync("RoomCreated", roomCode);
     }
 
@@ -34,7 +37,7 @@ public class GameHub : Hub
     //    await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
     //    await Clients.Group(roomCode).SendAsync("PlayerJoined", playerName);
     //}
-    public async Task JoinRoom(string roomCode, string playerName, string playerId)
+    public async Task JoinRoom(string roomCode, string playerName, string playerId, Avatar? avatar)
     {
         var room = _roomManager.GetRoom(roomCode);
         if (room == null)
@@ -46,12 +49,20 @@ public class GameHub : Hub
         var player = room.Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null)
         {
+            // Spelare som redan är med (t.ex. laddar om sidan) släpps alltid in igen
+            if (room.Players.Count >= MaxPlayers)
+            {
+                await Clients.Caller.SendAsync("JoinFailed", "Rummet är fullt!");
+                return;
+            }
+
             player = new Player { Id = playerId, Name = playerName };
             room.Players.Add(player);
         }
 
         player.Name = playerName;
         player.ConnectionId = Context.ConnectionId;
+        player.Avatar = await _avatarRepository.Validate(avatar);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
         //await Clients.Group(roomCode).SendAsync("PlayerListUpdated", room.Players.Select(p => p.Name));
@@ -80,7 +91,7 @@ public class GameHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomCode);
 
         if (room != null)
-            await Clients.Group(roomCode).SendAsync("PlayerListUpdated", room.Players.Select(p => p.Name));
+            await SendPlayerList(room);
 
         await Clients.Caller.SendAsync("YouLeftRoom");
     }
@@ -173,7 +184,10 @@ public class GameHub : Hub
         await SendPlayerList(room);
     }
 
+    // Skickar namn och gubbens bildlager (i rätt ordning) för varje spelare
     private Task SendPlayerList(GameSession room) =>
-        Clients.Group(room.RoomCode).SendAsync("PlayerListUpdated", room.Players.Select(p => p.Name));
+        Clients.Group(room.RoomCode).SendAsync("PlayerListUpdated",
+            room.Players.Select(p => new { name = p.Name, layers = p.Avatar.Layers.Where(l => l != null) }),
+            MaxPlayers);
     
 }

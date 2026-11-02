@@ -1,0 +1,18 @@
+@model Ritagissa.Models.Avatar
+@* Ritar en gubbe genom att lägga plaggens bilder ovanpå varandra.
+   Storleken styrs av den som använder den, t.ex. style="width: 80px" *@
+
+<div class="avatar">
+    @if (Model.Color == null)
+    {
+        @* Äldre vinnare sparades innan man kunde välja gubbe *@
+        <img src="~/images/theMan.png" alt="" />
+    }
+    else
+    {
+        foreach (var layer in Model.Layers.Where(l => l != null))
+        {
+            <img src="~/images/avatar/@(layer).png" alt="" />
+        }
+    }
+</div>

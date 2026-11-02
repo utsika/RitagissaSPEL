@@ -29,3 +29,15 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+/* Gubben: alla plagg är lika stora bilder (500x600) som läggs ovanpå varandra */
+.avatar {
+  position: relative;
+  aspect-ratio: 5 / 6;
+}
+
+  .avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }

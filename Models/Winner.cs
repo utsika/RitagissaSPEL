@@ -1,15 +1,11 @@
 namespace Ritagissa.Models
 {
-    // En rad i "Winners"-tabellen. Klädfälten är null tills gubben-skaparen finns.
+    // En rad i "Winners"-tabellen
     public class Winner
     {
         public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public long Points { get; set; }
-        public string? Hat { get; set; }
-        public string? Eyes { get; set; }
-        public string? Color { get; set; }
-        public string? Mouth { get; set; }
-        public string? Clothes { get; set; }
+        public Avatar Avatar { get; set; } = new();
     }
 }

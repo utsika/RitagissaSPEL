@@ -1,4 +1,5 @@
-﻿@{
+﻿@model AvatarOptions
+@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -44,6 +45,44 @@
         object-fit: contain;
         margin-bottom: 35px;
     }
+    /* Gubbväljaren: gubben i mitten, pilar på varje sida för varje plagg */
+    .avatarPicker {
+        position: relative;
+        width: 330px;
+        margin-bottom: 25px;
+    }
+
+        .avatarPicker .avatar {
+            width: 250px;
+            margin: 0 auto;
+        }
+
+        .avatarPicker .arrow {
+            position: absolute;
+            width: 24px;
+            height: 30px;
+            padding: 0;
+            margin: 0;
+            border-radius: 0;
+            background-color: #990000;
+            transform: translateY(-50%);
+        }
+
+            .avatarPicker .arrow:hover {
+                background-color: #4D0000;
+                transform: translateY(-50%);
+            }
+
+        .avatarPicker .arrow.left {
+            left: 0;
+            clip-path: polygon(100% 0, 0 50%, 100% 100%);
+        }
+
+        .avatarPicker .arrow.right {
+            right: 0;
+            clip-path: polygon(0 0, 100% 50%, 0 100%);
+        }
+
     /* Grundstil för knappar */
     button {
         width: 280px;
@@ -74,9 +113,10 @@
         }
 </style>
 <div class="homeContainer">
-    <img src="~/images/theMan.png"
-        alt="Spelmaskot"
-        class="theMan-image" />
+    <h3>Välj din gubbe</h3>
+    <div class="avatarPicker" id="avatarPicker">
+        <partial name="_Avatar" model="new Avatar()" />
+    </div>
 
 
     <h3>Skapa rum</h3>
@@ -92,6 +132,70 @@
 
 
 <script>
+    // ----- Gubbväljaren -----
+    const avatarOptions = @Json.Serialize(Model);
+
+    // Samma ordning som bilderna läggs på varandra. "top" är var pilarna sitter (i % av gubbens höjd).
+    const avatarParts = [
+        { key: "color", label: "kroppsfärg", top: 88 },
+        { key: "clothes", label: "kläder", top: 70 },
+        { key: "mouth", label: "mun", top: 43 },
+        { key: "eyes", label: "ögon", top: 31 },
+        { key: "hat", label: "hatt", top: 14 },
+    ];
+
+    // Börja med det som valdes senast i den här fliken, annars första alternativet
+    let avatar = {};
+    try { avatar = JSON.parse(sessionStorage.getItem("ritagissaAvatar")) || {}; } catch { }
+    avatarParts.forEach(part => {
+        const options = avatarOptions[part.key];
+        if (!options.includes(avatar[part.key])) avatar[part.key] = options[0] ?? null;
+    });
+
+    const picker = document.getElementById("avatarPicker");
+    const avatarBox = picker.querySelector(".avatar");
+    avatarBox.innerHTML = "";
+
+    avatarParts.forEach(part => {
+        const img = document.createElement("img");
+        img.alt = "";
+        avatarBox.appendChild(img);
+        part.img = img;
+
+        // Bara plagg med fler än ett alternativ behöver pilar
+        if (avatarOptions[part.key].length < 2) return;
+
+        ["left", "right"].forEach(side => {
+            const arrow = document.createElement("button");
+            arrow.type = "button";
+            arrow.className = `arrow ${side}`;
+            arrow.setAttribute("aria-label", `${side === "left" ? "Föregående" : "Nästa"} ${part.label}`);
+            // Pilarna sitter relativt gubben, som är 300px hög
+            arrow.style.top = `${part.top * 3}px`;
+            arrow.addEventListener("click", () => changePart(part, side === "left" ? -1 : 1));
+            picker.appendChild(arrow);
+        });
+    });
+
+    function changePart(part, step) {
+        const options = avatarOptions[part.key];
+        const index = options.indexOf(avatar[part.key]);
+        avatar[part.key] = options[(index + step + options.length) % options.length];
+        renderAvatar();
+    }
+
+    function renderAvatar() {
+        avatarParts.forEach(part => {
+            const name = avatar[part.key];
+            part.img.style.display = name ? "" : "none";
+            if (name) part.img.src = `/images/avatar/${name}.png`;
+        });
+        try { sessionStorage.setItem("ritagissaAvatar", JSON.stringify(avatar)); } catch { }
+    }
+
+    renderAvatar();
+    // ----- slut på gubbväljaren -----
+
     document.getElementById("createRoomBtn").addEventListener("click", () => {
         const playerName = document.getElementById("createPlayerNameInput").value;
         const roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();

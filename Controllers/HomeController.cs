@@ -28,9 +28,10 @@ namespace Ritagissa.Controllers
         //    return View();
         //}
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index([FromServices] AvatarRepository avatarRepository)
         {
-            return View();
+            var options = await avatarRepository.GetOptions();
+            return View(options);
         }
         public IActionResult Lobby()
         {

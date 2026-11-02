@@ -6,6 +6,13 @@
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--launch-profile", "http"],
       "port": 5257
+    },
+    {
+      "name": "ritagissa-test",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--launch-profile", "http", "--urls", "http://localhost:5260"],
+      "port": 5260,
+      "autoPort": false
     }
   ]
 }
