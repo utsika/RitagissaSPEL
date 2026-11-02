@@ -2,14 +2,94 @@
     ViewData["Title"] = "Home Page";
 }
 
-<h3>Skapa rum</h3>
-<input id="createPlayerNameInput" placeholder="Ditt namn" />
-<button id="createRoomBtn">Skapa rum</button>
+<style>
 
-<h3>Gå med i rum</h3>
-<input id="roomCodeInput" placeholder="Rumskod" />
-<input id="playerNameInput" placeholder="Ditt namn" />
-<button id="joinRoomBtn">Gå med</button>
+    body {
+        background-image: url('/images/backgroundImage.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+
+    /* Centrera hela innehållet på sidan */
+    .homeContainer {
+        min-height: 50vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Vertikalt */
+        align-items: center; /* Horisontellt */
+        text-align: center;
+    }
+
+    input {
+        width: 280px;
+        box-sizing: border-box;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        font-size: 18px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f7f7f5;
+        outline: none;
+        transition: 0.2s;
+    }
+
+    
+
+    /* Bilden */
+    .mascot-image {
+        width: 180px;
+        height: auto;
+        object-fit: contain;
+        margin-bottom: 35px;
+    }
+    /* Grundstil för knappar */
+    button {
+        width: 280px;
+        padding: 12px 28px;
+        margin-top: 5px;
+        margin-bottom: 20px;
+        border: none;
+        border-radius: 10px;
+        background-color: #990000;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        /* När muspekaren är över knappen */
+        button:hover {
+            background-color: #4D0000;
+            transform: translateY(-1px);
+            /* box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); */
+        }
+
+        /* När man klickar */
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+</style>
+<div class="homeContainer">
+    <img src="~/images/theMan.png"
+        alt="Spelmaskot"
+        class="theMan-image" />
+
+
+    <h3>Skapa rum</h3>
+    <input id="createPlayerNameInput" placeholder="Ditt namn" />
+    <button id="createRoomBtn">Skapa rum</button>
+
+
+    <h3>Gå med i rum</h3>
+    <input id="roomCodeInput" placeholder="Rumskod" />
+    <input id="playerNameInput" placeholder="Ditt namn" />
+    <button id="joinRoomBtn">Gå med</button>
+</div>
+
 
 <script>
     document.getElementById("createRoomBtn").addEventListener("click", () => {

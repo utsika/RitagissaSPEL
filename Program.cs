@@ -1,4 +1,5 @@
 using Npgsql;
+using Ritagissa.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<GameRoomManager>();
+builder.Services.AddSingleton<GameService>();
 
 var connString = builder.Configuration.GetConnectionString("Supabase");
 builder.Services.AddSingleton(new NpgsqlDataSourceBuilder(connString).Build());

@@ -7,12 +7,124 @@
     ViewData["Title"] = "Lobby";
 }
 
-<h2>Rum: <span id="roomCodeDisplay"></span></h2>
+<style>
+    gameButton {
+        width: 280px;
+        padding: 12px 28px;
+        margin-top: 5px;
+        margin-bottom: 20px;
+        border: none;
+        border-radius: 10px;
+        background-color: #990000;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
 
-<h3>Spelare i rummet</h3>
-<ul id="playerList"></ul>
+        /* När muspekaren är över knappen */
+        gameButton:hover {
+            background-color: #4D0000;
+            transform: translateY(-1px);
+            /* box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); */
+        }
 
-<button id="startGameBtn" style="display:none;">Starta spel</button>
+        /* När man klickar */
+        gameButton:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+    wordButtons {
+        display: flex;
+        gap: 16px;
+        margin: 16px 0;
+    }
+
+        wordButtons button {
+            padding: 24px 32px;
+            font-size: 1.4rem;
+            border: 2px solid #618985;
+            border-radius: 12px;
+            background: #96BBBB;
+            cursor: pointer;
+            align-items: center;
+        }
+
+            wordButtons button:hover:not(:disabled) {
+                background: #618985;
+            }
+
+            wordButtons button:disabled {
+                opacity: 0.5;
+                cursor: default;
+            }
+
+    drawCanvas {
+        border: 2px solid #333;
+        border-radius: 8px;
+        background: white;
+        max-width: 100%;
+        touch-action: none;
+    }
+
+    /* NYTT: rankinglistan */
+    rankingList {
+        list-style: none;
+        padding: 0;
+        font-size: 1.3rem;
+    }
+
+        rankingList li {
+            margin: 8px 0;
+        }
+</style>
+
+@* NYTT: rundinfo bredvid rumskoden *@
+<h2>Rum: <span id="roomCodeDisplay"></span> <small id="roundInfo"></small></h2>
+
+<div id="lobbyPanel">
+    <h3>Spelare i rummet</h3>
+    <ul id="playerList"></ul>
+
+    <button id="startGameBtn" style="display:none;">Starta spel</button>
+</div>
+
+<div id="choosePanel" style="display:none;">
+    <h3>Välj ett ord att rita</h3>
+    <p>Tid kvar: <span id="chooseTimer"></span> s</p>
+    <div id="wordButtons"></div>
+</div>
+
+<div id="waitPanel" style="display:none;">
+    <h3 id="waitText"></h3>
+    <p>Tid kvar: <span id="waitTimer"></span> s</p>
+</div>
+
+<div id="gamePanel" style="display:none;">
+    <h3 id="gameInfo"></h3>
+    <p>Tid kvar: <span id="drawTimer"></span> s</p>
+
+    <canvas id="drawCanvas" width="800" height="500"></canvas>
+
+    <div id="guessArea" style="display:none;">
+        <input id="guessInput" placeholder="Skriv din gissning"
+               autocomplete="off" autocapitalize="none" autocorrect="off" />
+        <button id="guessBtn">Gissa</button>
+    </div>
+
+    <ul id="guessLog"></ul>
+</div>
+
+@* NYTT: slutskärmen med ranking *@
+<div id="gameOverPanel" style="display:none;">
+    <h2>Spelet är slut!</h2>
+    <ul id="rankingList"></ul>
+
+    <button id="playAgainBtn" style="display:none;">Spela igen</button>
+    <p id="waitForHostMsg" style="display:none;">Väntar på att värden startar en ny omgång...</p>
+    <button id="leaveBtn">Lämna rummet</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
 <script>
@@ -31,6 +143,80 @@
         document.getElementById("startGameBtn").style.display = "inline-block";
     }
 
+    // NYTT: gameOverPanel tillagd i listan
+    const panels = ["lobbyPanel", "choosePanel", "waitPanel", "gamePanel", "gameOverPanel"];
+    function showPanel(name) {
+        panels.forEach(p => {
+            document.getElementById(p).style.display = (p === name) ? "block" : "none";
+        });
+    }
+
+    let countdownInterval = null;
+    function startCountdown(elementId, seconds) {
+        clearInterval(countdownInterval);
+        const el = document.getElementById(elementId);
+        el.textContent = seconds;
+        countdownInterval = setInterval(() => {
+            seconds--;
+            el.textContent = Math.max(seconds, 0);
+            if (seconds <= 0) clearInterval(countdownInterval);
+        }, 1000);
+    }
+
+    // ----- Canvas -----
+    const canvas = document.getElementById("drawCanvas");
+    const ctx = canvas.getContext("2d");
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "black";
+
+    let canDraw = false;
+    let isDrawing = false;
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawPoint(x, y, isNewStroke) {
+        if (isNewStroke) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: Math.round((e.clientX - rect.left) * (canvas.width / rect.width)),
+            y: Math.round((e.clientY - rect.top) * (canvas.height / rect.height))
+        };
+    }
+
+    canvas.addEventListener("pointerdown", (e) => {
+        if (!canDraw) return;
+        isDrawing = true;
+        canvas.setPointerCapture(e.pointerId);
+        const { x, y } = getPos(e);
+        drawPoint(x, y, true);
+        connection.invoke("SendDrawPoint", roomCode, x, y, true).catch(err => console.error(err));
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+        if (!canDraw || !isDrawing) return;
+        const { x, y } = getPos(e);
+        drawPoint(x, y, false);
+        connection.invoke("SendDrawPoint", roomCode, x, y, false).catch(err => console.error(err));
+    });
+
+    canvas.addEventListener("pointerup", () => { isDrawing = false; });
+    canvas.addEventListener("pointercancel", () => { isDrawing = false; });
+    // ----- slut canvas -----
+
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/gamehub")
         .build();
@@ -48,6 +234,154 @@
     connection.on("JoinFailed", (reason) => {
         alert(reason);
         window.location.href = "/";
+    });
+
+    connection.on("GameError", (msg) => alert(msg));
+
+    // NYTT: visar vilken runda det är
+    connection.on("RoundUpdated", (current, total) => {
+        document.getElementById("roundInfo").textContent = `– Runda ${current} av ${total}`;
+    });
+
+    connection.on("ChooseWord", (words, seconds) => {
+        const container = document.getElementById("wordButtons");
+        container.innerHTML = "";
+
+        words.forEach(word => {
+            const btn = document.createElement("button");
+            btn.textContent = word;
+            btn.addEventListener("click", () => {
+                container.querySelectorAll("button").forEach(b => b.disabled = true);
+                connection.invoke("SelectWord", roomCode, word).catch(err => console.error(err));
+            });
+            container.appendChild(btn);
+        });
+
+        showPanel("choosePanel");
+        startCountdown("chooseTimer", seconds);
+    });
+
+    connection.on("WaitingForWord", (drawerName, seconds) => {
+        document.getElementById("waitText").textContent =
+            `Väntar på att ${drawerName} ska välja ett ord...`;
+        showPanel("waitPanel");
+        startCountdown("waitTimer", seconds);
+    });
+
+    connection.on("StartDrawing", (word) => {
+        clearInterval(countdownInterval);
+        document.getElementById("gameInfo").textContent = `Du ritar: ${word}`;
+        clearCanvas();
+        document.getElementById("guessLog").innerHTML = "";
+        canDraw = true;
+        document.getElementById("guessArea").style.display = "none";
+        showPanel("gamePanel");
+    });
+
+    connection.on("StartGuessing", (drawerName, wordLength) => {
+        clearInterval(countdownInterval);
+        document.getElementById("gameInfo").textContent =
+            `${drawerName} ritar. Ordet har ${wordLength} bokstäver.`;
+        clearCanvas();
+        document.getElementById("guessLog").innerHTML = "";
+        canDraw = false;
+        document.getElementById("guessArea").style.display = "block";
+        showPanel("gamePanel");
+    });
+
+    connection.on("ReceiveDrawPoint", (x, y, isNewStroke) => {
+        drawPoint(x, y, isNewStroke);
+    });
+
+    connection.on("DrawTimerStarted", (seconds) => {
+        startCountdown("drawTimer", seconds);
+    });
+
+    // ----- Gissningar -----
+    function addToGuessLog(text, isCorrect) {
+        const li = document.createElement("li");
+        li.textContent = text;
+        if (isCorrect) {
+            li.style.color = "green";
+            li.style.fontWeight = "bold";
+        }
+        document.getElementById("guessLog").appendChild(li);
+    }
+
+    function sendGuess() {
+        const input = document.getElementById("guessInput");
+        const text = input.value.trim();
+        if (!text) return;
+        connection.invoke("SendGuess", roomCode, text).catch(err => console.error(err));
+        input.value = "";
+        input.focus();
+    }
+
+    document.getElementById("guessBtn").addEventListener("click", sendGuess);
+    document.getElementById("guessInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendGuess();
+    });
+
+    connection.on("ReceiveGuess", (name, text) => {
+        addToGuessLog(`${name}: ${text}`, false);
+    });
+
+    connection.on("CorrectGuess", (name) => {
+        addToGuessLog(`${name} gissade rätt!`, true);
+    });
+
+    connection.on("TurnEnded", (word, timedOut) => {
+    clearInterval(countdownInterval);
+    document.getElementById("drawTimer").textContent = "0";
+    canDraw = false;
+    isDrawing = false;
+    document.getElementById("guessArea").style.display = "none";
+    document.getElementById("gameInfo").textContent =
+        timedOut ? `Tiden är slut! Ordet var: ${word}`
+                 : `Turen är slut! Ordet var: ${word}`;
+});
+
+    // ----- NYTT: spelet slut, spela igen eller lämna -----
+    connection.on("GameOver", (ranking) => {
+        clearInterval(countdownInterval);
+        canDraw = false;
+        isDrawing = false;
+
+        const list = document.getElementById("rankingList");
+        list.innerHTML = "";
+        ranking.forEach(r => {
+            const li = document.createElement("li");
+            li.textContent = `${r.rank}. ${r.name} – ${r.points} p`;
+            list.appendChild(li);
+        });
+
+        document.getElementById("playAgainBtn").style.display = isHost ? "inline-block" : "none";
+        document.getElementById("waitForHostMsg").style.display = isHost ? "none" : "block";
+        showPanel("gameOverPanel");
+    });
+
+    connection.on("BackToLobby", () => {
+        clearCanvas();
+        document.getElementById("guessLog").innerHTML = "";
+        document.getElementById("roundInfo").textContent = "";
+        showPanel("lobbyPanel");
+    });
+
+    connection.on("YouLeftRoom", () => {
+        window.location.href = "/";
+    });
+
+    document.getElementById("playAgainBtn").addEventListener("click", () => {
+        connection.invoke("PlayAgain", roomCode).catch(err => console.error(err));
+    });
+
+    document.getElementById("leaveBtn").addEventListener("click", () => {
+        connection.invoke("LeaveRoom", roomCode, playerId).catch(err => console.error(err));
+    });
+    // ----- slut på det nya -----
+
+    document.getElementById("startGameBtn").addEventListener("click", () => {
+        connection.invoke("StartGame", roomCode).catch(err => console.error(err));
     });
 
     connection.start().then(() => {
