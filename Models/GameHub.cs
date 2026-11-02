@@ -4,6 +4,8 @@ using Ritagissa.Models;
 public class GameHub : Hub
 {
     private const int MinPlayers = 2;
+    private const int MinRounds = 2;
+    private const int MaxRounds = 6;
     private readonly GameRoomManager _roomManager;
     private readonly GameService _gameService;
 
@@ -54,6 +56,19 @@ public class GameHub : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
         //await Clients.Group(roomCode).SendAsync("PlayerListUpdated", room.Players.Select(p => p.Name));
         await SendPlayerList(room);
+        await Clients.Caller.SendAsync("TotalRoundsUpdated", room.TotalRounds);
+    }
+
+    public async Task SetTotalRounds(string roomCode, int rounds)
+    {
+        var room = _roomManager.GetRoom(roomCode);
+        if (room == null || room.State != GameState.Lobby) return;
+
+        // Bara hosten (första spelaren) får ändra
+        if (room.Players.Count == 0 || room.Players[0].ConnectionId != Context.ConnectionId) return;
+
+        room.TotalRounds = Math.Clamp(rounds, MinRounds, MaxRounds);
+        await Clients.Group(roomCode).SendAsync("TotalRoundsUpdated", room.TotalRounds);
     }
 
     public async Task LeaveRoom(string roomCode, string playerId)

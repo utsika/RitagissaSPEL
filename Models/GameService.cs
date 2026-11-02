@@ -8,6 +8,8 @@ namespace Ritagissa.Models
         private const int ChooseTimer = 30;
         // ändra till längre sen, men har så här nu för att kunna testa
         private const int DrawTimer = 15;
+        private const int WordChoiceCount = 3;
+        private const int MaxWordAttempts = 20;   // så vi inte loopar för evigt om ordlistan tar slut
         private const string WordApiUrl = "http://localhost:5231/api/ordlista/random";
 
         private readonly IHubContext<GameHub> _hubContext;
@@ -42,13 +44,16 @@ namespace Ritagissa.Models
             await _hubContext.Clients.Group(room.RoomCode)
                 .SendAsync("RoundUpdated", room.CurrentRound, room.TotalRounds);
 
-            // Hämta tre unika ord
+            // Hämta tre unika ord. Ordlistans API bryr sig inte om "exclude",
+            // så vi kollar själva och hämtar ett nytt ord om det redan finns med.
             var wordOptions = new List<OrdDTO>();
-            for (int i = 0; i < 3; i++)
+            for (int attempt = 0; attempt < MaxWordAttempts && wordOptions.Count < WordChoiceCount; attempt++)
             {
                 var excludeWord = room.UsedWords.Concat(wordOptions.Select(c => c.Word)).ToList();
                 var word = await GetRandomWord(excludeWord);
-                if (word != null)
+                if (word == null) break;   // API:t svarar inte, ingen idé att försöka igen
+
+                if (!excludeWord.Contains(word.Word, StringComparer.OrdinalIgnoreCase))
                 {
                     wordOptions.Add(word);
                 }

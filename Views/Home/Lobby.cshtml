@@ -60,6 +60,17 @@
                 cursor: default;
             }
 
+    #roundsSetting {
+        margin: 16px 0;
+        font-size: 1.1rem;
+    }
+
+        #roundsSlider {
+            display: block;
+            width: 280px;
+            accent-color: #990000;
+        }
+
     #drawCanvas {
         border: 2px solid #333;
         border-radius: 8px;
@@ -86,6 +97,12 @@
 <div id="lobbyPanel">
     <h3>Spelare i rummet</h3>
     <ul id="playerList"></ul>
+
+    @* Värden väljer antal rundor, de andra ser bara värdet *@
+    <div id="roundsSetting">
+        <label for="roundsSlider">Antal rundor: <strong id="roundsValue">2</strong></label>
+        <input type="range" id="roundsSlider" min="2" max="6" step="1" value="2" style="display:none;" />
+    </div>
 
     <button id="startGameBtn" style="display:none;">Starta spel</button>
 </div>
@@ -142,6 +159,7 @@
     document.getElementById("roomCodeDisplay").textContent = roomCode;
     if (isHost) {
         document.getElementById("startGameBtn").style.display = "inline-block";
+        document.getElementById("roundsSlider").style.display = "block";
     }
 
     // NYTT: gameOverPanel tillagd i listan
@@ -380,6 +398,20 @@
         connection.invoke("LeaveRoom", roomCode, playerId).catch(err => console.error(err));
     });
     // ----- slut på det nya -----
+
+    // Antal rundor: värden drar i slidern, servern skickar värdet till alla i rummet
+    const roundsSlider = document.getElementById("roundsSlider");
+    roundsSlider.addEventListener("input", () => {
+        document.getElementById("roundsValue").textContent = roundsSlider.value;
+    });
+    roundsSlider.addEventListener("change", () => {
+        connection.invoke("SetTotalRounds", roomCode, parseInt(roundsSlider.value)).catch(err => console.error(err));
+    });
+
+    connection.on("TotalRoundsUpdated", (rounds) => {
+        roundsSlider.value = rounds;
+        document.getElementById("roundsValue").textContent = rounds;
+    });
 
     document.getElementById("startGameBtn").addEventListener("click", () => {
         connection.invoke("StartGame", roomCode).catch(err => console.error(err));
