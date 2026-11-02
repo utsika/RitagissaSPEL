@@ -1,33 +1,29 @@
 @model List<Ritagissa.Models.Winner>
 @{
     ViewData["Title"] = "Highscore";
+    ViewData["BackUrl"] = "/";
 }
 
 <style>
-    .highscoreContainer {
-        max-width: 480px;
-        margin: 0 auto;
-        text-align: center;
-    }
+    /* Ramen (.gameFrame), knapparna (.frameButton) och bakgrunden finns i site.css */
 
     .highscoreTable {
         width: 100%;
+        max-width: 480px;
         border-collapse: collapse;
-        margin-top: 16px;
+        margin: 24px 0;
     }
 
-        .highscoreTable th,
-        .highscoreTable td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #ddd;
-        }
-
         .highscoreTable th {
-            background: #F8A5C2;
+            padding: 8px 12px;
+            font-weight: normal;
+            border-bottom: 3px solid #990000;
         }
 
         .highscoreTable td {
+            padding: 8px 12px;
             vertical-align: middle;
+            border-bottom: 1px solid #eee;
         }
 
         .highscoreTable .avatar {
@@ -38,14 +34,22 @@
         .highscoreTable th:last-child {
             text-align: right;
         }
+
+        /* Ettan får lite extra uppmärksamhet */
+        .highscoreTable tr.first td {
+            font-size: 1.2rem;
+            color: #990000;
+        }
+
 </style>
 
-<div class="highscoreContainer">
+<div class="gameFrame">
+    <partial name="_BackArrow" />
     <h2>Highscore</h2>
 
     @if (Model.Count == 0)
     {
-        <p>Inga vinnare än – spela en omgång!</p>
+        <p style="margin: 40px 0;">Inga vinnare än – spela en omgång!</p>
     }
     else
     {
@@ -61,7 +65,7 @@
             <tbody>
                 @for (int i = 0; i < Model.Count; i++)
                 {
-                    <tr>
+                    <tr class="@(i == 0 ? "first" : "")">
                         <td>@(i + 1)</td>
                         <td>
                             <partial name="_Avatar" model="Model[i].Avatar" />
@@ -73,6 +77,4 @@
             </tbody>
         </table>
     }
-
-    <p style="margin-top: 24px;"><a asp-controller="Home" asp-action="Index">Tillbaka</a></p>
 </div>

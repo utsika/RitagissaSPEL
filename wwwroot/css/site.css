@@ -41,3 +41,102 @@ body {
     width: 100%;
     height: 100%;
   }
+
+/* ----- Gemensam stil för Ritagissa ----- */
+body {
+  background-image: url('/images/backgroundImage.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Den vita rutan med röd ram som allt innehåll ligger i */
+.gameFrame {
+  position: relative;   /* så tillbaka-pilen kan placeras i hörnet */
+  max-width: 680px;
+  margin: 0 auto 40px;
+  padding: 24px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white;
+  border: 3px solid #990000;
+  border-radius: 8px;
+  font-family: 'Madimi One', sans-serif;
+  text-align: center;
+}
+
+  .gameFrame h2,
+  .gameFrame h3,
+  .gameFrame h4 {
+    font-family: inherit;
+  }
+
+  .gameFrame h2 {
+    font-size: 1.6rem;
+    margin-bottom: 0;
+  }
+
+  .gameFrame h3 {
+    font-size: 1.5rem;
+  }
+
+/* Vit knapp med röd ram (fungerar både på <button> och <a>) */
+.frameButton {
+  display: inline-block;
+  padding: 8px 12px;
+  min-width: 66px;
+  font-family: 'Madimi One', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  text-decoration: none;
+  background: white;
+  color: black;
+  border: 3px solid #990000;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+  .frameButton:hover:not(:disabled) {
+    background: #990000;
+    color: white;
+  }
+
+  .frameButton:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+/* Textfält som bara är en linje, som "Gissa:" */
+.lineInput {
+  padding: 0 4px;
+  font-family: 'Madimi One', sans-serif;
+  border: none;
+  border-bottom: 2px solid black;
+  outline: none;
+  background: transparent;
+}
+
+/* Luft överst på sidan där menyn satt */
+.topBar {
+  height: 40px;
+}
+
+/* Röd pil åt vänster i rutans övre vänstra hörn, samma stil som pilarna i gubbväljaren */
+.backArrow {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: block;
+  width: 26px;
+  height: 32px;
+  background-color: #990000;
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+  transition: 0.2s;
+}
+
+  .backArrow:hover {
+    background-color: #4D0000;
+  }

@@ -1,6 +1,10 @@
 ﻿@{
     ViewData["Title"] = "Privacy Policy";
+    ViewData["BackUrl"] = "/";
 }
-<h1>@ViewData["Title"]</h1>
+<div class="gameFrame">
+    <partial name="_BackArrow" />
+    <h2>@ViewData["Title"]</h2>
 
-<p>Use this page to detail your site's privacy policy.</p>
+    <p style="margin-top: 24px;">Use this page to detail your site's privacy policy.</p>
+</div>

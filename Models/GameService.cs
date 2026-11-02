@@ -234,7 +234,8 @@ namespace Ritagissa.Models
             {
                 rank = ordered.FindIndex(o => o.Points == p.Points) + 1,   // lika poäng ger samma placering
                 name = p.Name,
-                points = p.Points
+                points = p.Points,
+                layers = p.Avatar.Layers.Where(l => l != null)   // gubben till prispallen
             }).ToList();
 
             await _hubContext.Clients.Group(room.RoomCode).SendAsync("GameOver", ranking);

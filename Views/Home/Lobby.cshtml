@@ -5,12 +5,7 @@
 }
 @{
     ViewData["Title"] = "Lobby";
-}
-
-@section Head {
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Madimi+One&display=swap" rel="stylesheet" />
+    ViewData["BackUrl"] = "/";   // tillbaka-pilen lämnar rummet, se .backArrow i scriptet
 }
 
 <style>
@@ -49,39 +44,12 @@
         margin: 24px 0 40px;
     }
 
-    body {
-        background-image: url('/images/backgroundImage.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }
-
-    /* ----- Ramen runt lobbyn och spelvyerna ----- */
+    /* Ramen (.gameFrame), knapparna (.frameButton) och bakgrunden finns i site.css */
     .gameFrame {
-        max-width: 680px;
         min-height: 440px;
-        margin: 0 auto 40px;
-        padding: 24px 32px 32px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background: white;
-        border: 3px solid #990000;
-        border-radius: 8px;
-        font-family: 'Madimi One', sans-serif;
-        text-align: center;
     }
-
-        .gameFrame h2 {
-            font-family: inherit;
-            font-size: 1.6rem;
-            margin-bottom: 0;
-        }
 
         .gameFrame h3 {
-            font-family: inherit;
-            font-size: 1.5rem;
             margin: auto 0 0;
         }
 
@@ -112,29 +80,6 @@
             margin-right: 16px;
         }
 
-    /* Vit knapp med röd ram: startknappen och ordknapparna */
-    .frameButton {
-        padding: 8px 12px;
-        min-width: 66px;
-        font-family: inherit;
-        font-size: 1.1rem;
-        background: white;
-        color: black;
-        border: 3px solid #990000;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-
-        .frameButton:hover:not(:disabled) {
-            background: #990000;
-            color: white;
-        }
-
-        .frameButton:disabled {
-            opacity: 0.5;
-            cursor: default;
-        }
 
     /* ----- Ritvyn: chatt till vänster, canvas till höger ----- */
     #gamePanel.gameFrame {
@@ -321,16 +266,80 @@
 
 
 
-    /* NYTT: rankinglistan */
-    #rankingList {
-        list-style: none;
-        padding: 0;
-        font-size: 1.3rem;
+    /* ----- Slutskärmen: prispall för topp tre ----- */
+    .podium {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 12px;
+        width: 100%;
+        margin: 28px 0 16px;
     }
 
-        #rankingList li {
-            margin: 8px 0;
+    .podiumPlace {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 0 1 150px;
+        min-width: 0;
+    }
+
+        /* Tvåan till vänster, ettan i mitten, trean till höger */
+        .podiumPlace.pos1 { order: 2; }
+        .podiumPlace.pos2 { order: 1; }
+        .podiumPlace.pos3 { order: 3; }
+
+        .podiumPlace .avatar {
+            width: 90px;
         }
+
+    .podiumName {
+        max-width: 100%;
+        margin-top: 4px;
+        overflow-wrap: anywhere;
+    }
+
+    .podiumPoints {
+        font-size: 0.8rem;
+        margin-bottom: 6px;
+    }
+
+    /* Själva pallen. Höjden följer placeringen, så lika poäng ger lika höga block */
+    .podiumStep {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 50px;
+        font-size: 1.6rem;
+        color: white;
+        background: #990000;
+        border-radius: 6px 6px 0 0;
+    }
+
+        .podiumPlace.rank1 .podiumStep { height: 110px; font-size: 2.4rem; }
+        .podiumPlace.rank2 .podiumStep { height: 80px; font-size: 2rem; }
+
+    /* Fyran och nedåt */
+    #restList {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 16px;
+        font-size: 0.9rem;
+    }
+
+    .gameOverButtons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    #waitForHostMsg {
+        margin: 8px 0 0;
+        font-size: 0.9rem;
+    }
 </style>
 
 @* Spelarens egen gubbe, visas uppe till höger under spelets gång *@
@@ -340,6 +349,7 @@
 </div>
 
 <div id="lobbyPanel" class="gameFrame">
+    <partial name="_BackArrow" />
     <h2 class="roomCode"></h2>
     <ul id="playerList"></ul>
 
@@ -355,6 +365,7 @@
 </div>
 
 <div id="choosePanel" class="gameFrame" style="display:none;">
+    <partial name="_BackArrow" />
     <h2 class="roomCode"></h2>
     <div class="roundInfo"></div>
     <h3>Välj ett ord :)</h3>
@@ -363,6 +374,7 @@
 </div>
 
 <div id="waitPanel" class="gameFrame" style="display:none;">
+    <partial name="_BackArrow" />
     <h2 class="roomCode"></h2>
     <div class="roundInfo"></div>
     <h3 id="waitText"></h3>
@@ -370,6 +382,7 @@
 </div>
 
 <div id="gamePanel" class="gameFrame" style="display:none;">
+    <partial name="_BackArrow" />
     <h2 class="roomCode"></h2>
     <div class="roundInfo"></div>
 
@@ -394,14 +407,21 @@
 </div>
 
 @* NYTT: slutskärmen med ranking *@
-<div id="gameOverPanel" style="display:none;">
+<div id="gameOverPanel" class="gameFrame" style="display:none;">
+    <partial name="_BackArrow" />
     <h2>Spelet är slut!</h2>
-    <ul id="rankingList"></ul>
 
-    <button id="playAgainBtn" style="display:none;">Spela igen</button>
+    <div id="podium" class="podium"></div>
+    <ul id="restList"></ul>
+
     <p id="waitForHostMsg" style="display:none;">Väntar på att värden startar en ny omgång...</p>
-    <button id="leaveBtn">Lämna rummet</button>
-    <p><a href="/Home/Highscore" target="_blank">Se highscore-listan</a></p>
+
+    <div class="gameOverButtons">
+        <button id="playAgainBtn" class="frameButton" style="display:none;">Spela igen</button>
+        @* Öppnas i ny flik så man inte lämnar rummet *@
+        <a class="frameButton" href="/Home/Highscore" target="_blank">Highscore</a>
+        <button id="leaveBtn" class="frameButton">Lämna rummet</button>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
@@ -672,12 +692,40 @@
         canDraw = false;
         isDrawing = false;
 
-        const list = document.getElementById("rankingList");
-        list.innerHTML = "";
-        ranking.forEach(r => {
+        // Topp tre på prispallen (ranking är redan sorterad, lika poäng har samma rank)
+        const podium = document.getElementById("podium");
+        podium.innerHTML = "";
+        ranking.slice(0, 3).forEach((r, index) => {
+            const place = document.createElement("div");
+            place.className = `podiumPlace pos${index + 1} rank${r.rank}`;
+
+            const avatarBox = document.createElement("div");
+            avatarBox.className = "avatar";
+            fillAvatar(avatarBox, r.layers);
+
+            const name = document.createElement("div");
+            name.className = "podiumName";
+            name.textContent = r.name;
+
+            const points = document.createElement("div");
+            points.className = "podiumPoints";
+            points.textContent = `${r.points} p`;
+
+            const step = document.createElement("div");
+            step.className = "podiumStep";
+            step.textContent = r.rank;
+
+            place.append(avatarBox, name, points, step);
+            podium.appendChild(place);
+        });
+
+        // Resten som vanlig lista under pallen
+        const rest = document.getElementById("restList");
+        rest.innerHTML = "";
+        ranking.slice(3).forEach(r => {
             const li = document.createElement("li");
             li.textContent = `${r.rank}. ${r.name} – ${r.points} p`;
-            list.appendChild(li);
+            rest.appendChild(li);
         });
 
         document.getElementById("playAgainBtn").style.display = isHost ? "inline-block" : "none";
@@ -719,6 +767,13 @@
         roundsSlider.value = rounds;
         document.getElementById("roundsValue").textContent = rounds;
     });
+
+    // Tillbaka-pilen (en i varje ram) lämnar rummet ordentligt istället för att bara byta sida
+    document.querySelectorAll(".backArrow").forEach(arrow => arrow.addEventListener("click", (e) => {
+        e.preventDefault();
+        connection.invoke("LeaveRoom", roomCode, playerId)
+            .catch(() => window.location.href = "/");   // inte uppkopplad, gå hem ändå
+    }));
 
     document.getElementById("startGameBtn").addEventListener("click", () => {
         connection.invoke("StartGame", roomCode).catch(err => console.error(err));

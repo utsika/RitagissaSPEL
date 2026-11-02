@@ -1,0 +1,6 @@
+@* Tillbaka-pil i övre vänstra hörnet av den vita rutan (.gameFrame).
+   Sidan bestämmer vart den går med ViewData["BackUrl"]. *@
+@if (ViewData["BackUrl"] is string backUrl)
+{
+    <a class="backArrow" href="@backUrl" aria-label="Tillbaka"></a>
+}
