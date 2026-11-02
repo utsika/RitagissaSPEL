@@ -63,6 +63,7 @@ public class GameHub : Hub
         player.Name = playerName;
         player.ConnectionId = Context.ConnectionId;
         player.Avatar = await _avatarRepository.Validate(avatar);
+        await Clients.Caller.SendAsync("YourAvatar", player.Avatar.Layers.Where(l => l != null));
 
         await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
         //await Clients.Group(roomCode).SendAsync("PlayerListUpdated", room.Players.Select(p => p.Name));
