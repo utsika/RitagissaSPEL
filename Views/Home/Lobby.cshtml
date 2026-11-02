@@ -8,7 +8,7 @@
 }
 
 <style>
-    gameButton {
+    #gameButton {
         width: 280px;
         padding: 12px 28px;
         margin-top: 5px;
@@ -24,43 +24,43 @@
     }
 
         /* När muspekaren är över knappen */
-        gameButton:hover {
+        #gameButton:hover {
             background-color: #4D0000;
             transform: translateY(-1px);
             /* box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); */
         }
 
         /* När man klickar */
-        gameButton:active {
+        #gameButton:active {
             transform: translateY(0);
             box-shadow: none;
         }
-    wordButtons {
+    #wordButtons {
         display: flex;
         gap: 16px;
         margin: 16px 0;
     }
 
-        wordButtons button {
+        #wordButtons button {
             padding: 24px 32px;
             font-size: 1.4rem;
-            border: 2px solid #618985;
+            border: 2px solid #D63384;
             border-radius: 12px;
-            background: #96BBBB;
+            background: #F8A5C2;
             cursor: pointer;
             align-items: center;
         }
 
-            wordButtons button:hover:not(:disabled) {
-                background: #618985;
+            #wordButtons button:hover:not(:disabled) {
+                background: #E75480;
             }
 
-            wordButtons button:disabled {
+            #wordButtons button:disabled {
                 opacity: 0.5;
                 cursor: default;
             }
 
-    drawCanvas {
+    #drawCanvas {
         border: 2px solid #333;
         border-radius: 8px;
         background: white;
@@ -69,13 +69,13 @@
     }
 
     /* NYTT: rankinglistan */
-    rankingList {
+    #rankingList {
         list-style: none;
         padding: 0;
         font-size: 1.3rem;
     }
 
-        rankingList li {
+        #rankingList li {
             margin: 8px 0;
         }
 </style>
@@ -124,6 +124,7 @@
     <button id="playAgainBtn" style="display:none;">Spela igen</button>
     <p id="waitForHostMsg" style="display:none;">Väntar på att värden startar en ny omgång...</p>
     <button id="leaveBtn">Lämna rummet</button>
+    <p><a href="/Home/Highscore" target="_blank">Se highscore-listan</a></p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>

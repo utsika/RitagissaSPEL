@@ -11,6 +11,7 @@ builder.Services.AddSingleton<GameService>();
 
 var connString = builder.Configuration.GetConnectionString("Supabase");
 builder.Services.AddSingleton(new NpgsqlDataSourceBuilder(connString).Build());
+builder.Services.AddSingleton<WinnerRepository>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

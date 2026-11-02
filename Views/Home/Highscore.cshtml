@@ -1,0 +1,66 @@
+@model List<Ritagissa.Models.Winner>
+@{
+    ViewData["Title"] = "Highscore";
+}
+
+<style>
+    .highscoreContainer {
+        max-width: 480px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .highscoreTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+    }
+
+        .highscoreTable th,
+        .highscoreTable td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .highscoreTable th {
+            background: #F8A5C2;
+        }
+
+        .highscoreTable td:last-child,
+        .highscoreTable th:last-child {
+            text-align: right;
+        }
+</style>
+
+<div class="highscoreContainer">
+    <h2>Highscore</h2>
+
+    @if (Model.Count == 0)
+    {
+        <p>Inga vinnare än – spela en omgång!</p>
+    }
+    else
+    {
+        <table class="highscoreTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Namn</th>
+                    <th>Poäng</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td>@Model[i].Name</td>
+                        <td>@Model[i].Points</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <p style="margin-top: 24px;"><a asp-controller="Home" asp-action="Index">Tillbaka</a></p>
+</div>

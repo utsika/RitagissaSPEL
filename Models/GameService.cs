@@ -12,11 +12,16 @@ namespace Ritagissa.Models
 
         private readonly IHubContext<GameHub> _hubContext;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly WinnerRepository _winnerRepository;
+        private readonly ILogger<GameService> _logger;
 
-        public GameService(IHubContext<GameHub> hubContext, IHttpClientFactory httpClientFactory)
+        public GameService(IHubContext<GameHub> hubContext, IHttpClientFactory httpClientFactory,
+            WinnerRepository winnerRepository, ILogger<GameService> logger)
         {
             _hubContext = hubContext;
             _httpClientFactory = httpClientFactory;
+            _winnerRepository = winnerRepository;
+            _logger = logger;
         }
 
         public async Task StartGame(GameSession room)
@@ -228,6 +233,21 @@ namespace Ritagissa.Models
             }).ToList();
 
             await _hubContext.Clients.Group(room.RoomCode).SendAsync("GameOver", ranking);
+
+            // Spara vinnaren/vinnarna (alla med högst poäng) i highscore-listan
+            var topPoints = ordered[0].Points;
+            if (topPoints > 0)
+            {
+                try
+                {
+                    await _winnerRepository.AddWinners(ordered.Where(p => p.Points == topPoints));
+                }
+                catch (Exception ex)
+                {
+                    // Spelet ska inte krascha om databasen strular, men vi vill se felet
+                    _logger.LogError(ex, "Kunde inte spara vinnare för rum {RoomCode}", room.RoomCode);
+                }
+            }
         }
         private static string Normalize(string text)
         {

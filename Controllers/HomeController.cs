@@ -41,6 +41,12 @@ namespace Ritagissa.Controllers
             return View();
         }
 
+        public async Task<IActionResult> Highscore([FromServices] WinnerRepository winnerRepository)
+        {
+            var winners = await winnerRepository.GetTopWinners(10);
+            return View(winners);
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
