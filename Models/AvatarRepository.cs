@@ -32,7 +32,7 @@ namespace Ritagissa.Models
             {
                 var name = reader.GetString(1);
 
-                // Plagg utan bildfil (t.ex. "keps") går inte att visa, så de hoppas över
+                // Plagg utan bildfil hämtas inte
                 if (!File.Exists(Path.Combine(_imageFolder, name + ".png"))) continue;
 
                 var list = reader.GetString(0) switch
